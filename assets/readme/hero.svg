@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
   <title id="title">云舒的 Skills 搭子们</title>
-  <desc id="desc">云舒的狗子 IP 戴着蓝色帽子，与 33 个面向产品、开发、研究和写作的 Agent Skills 组成一张品牌封面。</desc>
+  <desc id="desc">云舒的狗子 IP 戴着蓝色帽子，与 34 个面向产品、开发、研究和写作的 Agent Skills 组成一张品牌封面。</desc>
 
   <defs>
     <clipPath id="portrait">
@@ -45,10 +45,10 @@
 
     <g font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">
       <text x="60" y="469" fill="#7B8190" font-size="10" font-weight="750" letter-spacing="1.2">INSTALLABLE</text>
-      <text x="60" y="509" fill="#34415F" font-size="35" font-weight="850">33</text>
+      <text x="60" y="509" fill="#34415F" font-size="35" font-weight="850">34</text>
 
       <text x="200" y="469" fill="#7B8190" font-size="10" font-weight="750" letter-spacing="1.2">RECOMMENDED</text>
-      <text x="200" y="509" fill="#34415F" font-size="35" font-weight="850">32</text>
+      <text x="200" y="509" fill="#34415F" font-size="35" font-weight="850">33</text>
 
       <text x="374" y="469" fill="#7B8190" font-size="10" font-weight="750" letter-spacing="1.2">FORMAT</text>
       <text x="374" y="505" fill="#34415F" font-size="17" font-weight="800">SKILL.md</text>

@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="./assets/readme/hero.png" width="100%" alt="Yunshu's Skills crew: the dog mascot with 33 agent skills for product, engineering, research, writing, and personal productivity" />
+  <img src="./assets/readme/hero.png" width="100%" alt="Yunshu's Skills crew: the dog mascot with 34 agent skills for product, engineering, research, writing, and personal productivity" />
 </p>
 
 # Yunshu SkillsHub
@@ -14,12 +14,12 @@ Turn fuzzy requests into reusable, executable, and verifiable AI workflows.
   <a href="https://github.com/yunshu0909/yunshu_skillshub/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/yunshu0909/yunshu_skillshub?style=flat-square&color=4E63D9" /></a>
   <a href="https://github.com/yunshu0909/yunshu_skillshub/network/members"><img alt="GitHub Forks" src="https://img.shields.io/github/forks/yunshu0909/yunshu_skillshub?style=flat-square&color=1FA884" /></a>
   <a href="./LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-172033?style=flat-square" /></a>
-  <img alt="33 installable skills" src="https://img.shields.io/badge/skills-33_installable-F6F3EA?style=flat-square&labelColor=172033" />
+  <img alt="34 installable skills" src="https://img.shields.io/badge/skills-34_installable-F6F3EA?style=flat-square&labelColor=172033" />
 </p>
 
 This is not a pile of disconnected prompts. Each Skill uses `SKILL.md` to preserve its triggers, stages, decision gates, constraints, and deliverables so agents such as Codex and Claude Code can apply the same method repeatedly.
 
-> The `skills` CLI discovers **33 installable Skills** in this repository: **32 are recommended**, while `plan-report` is retained for compatibility after its workflow moved into `issue-pool`.
+> The `skills` CLI discovers **34 installable Skills** in this repository: **33 are recommended**, while `plan-report` is retained for compatibility after its workflow moved into `issue-pool`.
 
 ## A real delivery path
 
@@ -68,11 +68,12 @@ Then describe the job in plain language:
 ```text
 Capture an issue: the page feels too bright when used at night.
 Turn this fuzzy request into a goal that Codex can execute autonomously.
+Keep learning my context and help me find the three priorities that matter most right now.
 Scan the Agent Memory ecosystem and show me real artifacts.
 Turn these scattered thoughts into a coherent article.
 ```
 
-You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/case-radar`, or `/writing-assistant`.
+You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/find-top-three`, `/case-radar`, or `/writing-assistant`.
 
 ## Find a Skill by the problem
 
@@ -101,7 +102,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/case-radar`
 | [`project-map-builder`](./project-map-builder) | A repository needs a concise directory map | `PROJECT_MAP.md` |
 | [`git-push`](./git-push) | A project needs its first push, update, or release | Safety checks, push, and release workflow |
 
-### Research and decisions · 6
+### Research and decisions · 7
 
 | Skill | Use it when | Main output |
 | --- | --- | --- |
@@ -109,6 +110,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/case-radar`
 | [`github-repo-search`](./github-repo-search) | Open-source projects need searching and filtering | Comparable Top-N recommendation report |
 | [`system-study`](./system-study) | You want to understand a field systematically | Structured HTML learning material |
 | [`multi-perspective-analysis`](./multi-perspective-analysis) | One question needs independent viewpoints | Consensus, disagreements, and blind spots |
+| [`find-top-three`](./find-top-three) | Life, career, or a personal business needs three strategic priorities | Dynamic user model, strategic top three, review boundaries |
 | [`thinking-partner`](./thinking-partner) | The situation is messy and the bottleneck is unclear | Diagnosis, co-created solution, action plan |
 | [`priority-judge`](./priority-judge) | Too many tasks compete for attention | Priority decision and next action |
 
@@ -144,7 +146,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/case-radar`
 - [CodePal Managed Project Example](https://github.com/yunshu0909/codepal-managed-project-example): a public Issue → design → PRD → test → PR → feedback loop.
 - [PRD review sample](./prd-test-writer/samples/PRD-SAMPLE-review.html): a human-facing PRD review page.
 - [Test-case review sample](./prd-test-writer/samples/PRD-SAMPLE-测试用例-review.html): executable cases aligned with the PRD.
-- [10 curated usage examples](./EXAMPLES.md): triggers, conversations, and expected outputs.
+- [11 curated usage examples](./EXAMPLES.md): triggers, conversations, and expected outputs.
 - [Changelog](./CHANGELOG.md): new Skills, changes, and Beta status.
 
 ## Design principles
@@ -157,7 +159,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/case-radar`
 
 ## Compatibility and repository shape
 
-The repository follows the `SKILL.md` directory convention, and the `skills` CLI discovers all 33 Skills. Agent toolsets differ; Skills that need browsing, image generation, browser control, or multiple agents follow the dependencies and fallback rules documented in their own `SKILL.md`.
+The repository follows the `SKILL.md` directory convention, and the `skills` CLI discovers all 34 Skills. Agent toolsets differ; Skills that need browsing, image generation, browser control, or multiple agents follow the dependencies and fallback rules documented in their own `SKILL.md`.
 
 ```text
 <skill-name>/
