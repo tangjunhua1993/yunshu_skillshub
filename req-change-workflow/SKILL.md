@@ -1,12 +1,6 @@
 ---
 name: req-change-workflow
-description: >
-  Standardize requirement/feature changes in an existing codebase (especially Chrome extensions) by turning
-  "改需求/需求变更/调整交互/改功能/重构流程" into a repeatable loop: clarify acceptance criteria, confirm current
-  behavior from code, assess impact/risk, design the new logic, implement with small diffs, run a fixed
-  regression checklist, and update docs/decision log. Use when the user feels the change process is chaotic,
-  when edits tend to sprawl across files, or when changes touch manifest/service worker/OAuth/storage/UI and
-  need reliable verification + rollback planning.
+description: 已有功能的需求变更闭环（门禁式七步）。触发硬条件：要改的功能已经实现并跑起来了。当用户说"改需求""需求变更""调整交互""改功能""重构流程"，或改动容易散到多个文件、碰到鉴权/存储/配置/权限、需要可靠验证 + 回滚方案时使用。流程：锁 scope 写 change brief → 从代码确认当前行为（不靠记忆和假设）→ 影响面与风险评估 + 回滚计划 → 提出新设计等用户批准（**未获批准绝不动代码**）→ 小而局部的 diff → 跑固定回归清单 → 更新文档和决策日志。产出：change brief + 代码 diff + 回归记录 + decision log。不适用于：全新功能从零做（走 issue-pool → design-exploration → prd-test-writer）、只改视觉样式不动任何逻辑（用 ui-design）、新想法还没定要不要做（先用 issue-pool 入池）、写 PRD/测试用例（用 prd-test-writer）、提交推送发版（用 git-push）。注意：本 skill 的七步流程通用于任何项目，但 references/regression-checklist.md 和 scripts/impact_scan.sh 目前是 Chrome 扩展专用（manifest/service worker 等）——非扩展项目照流程走，但回归清单需按该项目实际重写，不要照搬。
 ---
 
 # Req Change Workflow

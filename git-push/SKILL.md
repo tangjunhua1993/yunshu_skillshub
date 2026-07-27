@@ -1,6 +1,6 @@
 ---
 name: git-push
-description: 一键推送项目到 GitHub。自动扫描大文件、生成 .gitignore、初始化 Git、创建仓库并推送。支持首次推送、日常更新、版本发布三种模式。当用户说"推到GitHub"、"推送到GitHub"、"git push"、"上传到GitHub"、"发版本"、"打release"、"/git-push"时触发。
+description: 把项目推送到 GitHub，三种模式自动判断：**首次推送**（大文件扫描 → 生成 .gitignore → git init → gh 建仓 → 推送）、**日常更新**（commit + push）、**版本发布**（打 tag + 建 Release，可附下载文件）。核心原则是安全第一：推之前必扫大文件和敏感文件，宁可多问一句也不把不该推的东西推上去。当用户说"推到GitHub""推送到GitHub""git push""上传到GitHub""提交并推送""发版本""打release""打tag""/git-push"时触发。不适用于：规划哪些功能进哪个版本号（用 issue-pool——本 skill 只负责把已经定好的版本号打成 tag）、复杂 git 操作如 rebase/cherry-pick/解冲突/改历史/回滚（直接用 git 命令，本 skill 不覆盖）、代码写完前的自测和验收。
 ---
 
 # 一键推送 GitHub

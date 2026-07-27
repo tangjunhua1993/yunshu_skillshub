@@ -1,6 +1,6 @@
 ---
 name: issue-pool
-description: Issue 池全生命周期管理（开发范式 v1 规划段）：记 issue 入池+关联检查、合并同源需求、讨论拆解（引导讲出真需求）、转成可开工 task 或滚动 plan、拆不动就 pending。复杂 plan 的框架计划正文流程已内置（原 plan-report 并入 references/plan-writing.md）。当用户说"记个 issue""新增/汇总 issue""拆 issue / 拆解 #N""过一遍池子""需求池""这个 issue 怎么做""写框架计划""版本路线""阶段方案"时触发。不负责：写 PRD/测试用例/设计图（用 prd-test-writer / design-exploration）、写代码、开分支、发版打 tag、定优先级。
+description: Issue 池全生命周期管理（开发范式 v1 规划段）。核心是一条 issue 驱动的流程：用户随手丢想法，你把糊的 issue 变成能开工的 task——产出的是"问题定义"，不是"解决方案实现"；载体就是仓库根的 ISSUES.md 一个 markdown 文件，不引入看板或新格式。五个动作：记（原话入池 + 关联检查）、并（合并同源需求）、拆（讨论拆解，引导用户讲出方案背后的真需求）、转（落产出）、pending（聊两轮还糊就记下卡点放回池子，禁止编假 plan 交差）。转的判型标准只有一条"一个版本能不能交付完"：能 → 简单 task，一段话 + 3~5 条验收点写在池子条目下；不能 → 复杂 plan，落 docs/plan/ 并按 references/plan-writing.md 七步写框架计划正文（讲"为什么做 / 做到什么程度算完 / 分几步走"，不掺字段接口），尾巴必须留糊，交付一批回来再拆下一批。当用户说"记个 issue""新增/汇总 issue""拆 issue / 拆解 #N""过一遍池子""需求池""这个 issue 怎么做""写计划报告""框架计划""项目计划""v1.0 计划""版本路线""阶段方案"时触发。不负责：界面长什么样（用 design-exploration）、PRD/测试用例（用 prd-test-writer）、改一个已经上线跑着的功能（用 req-change-workflow）、写给别的 AI 自主执行的 goal contract（用 goal-setter）、非计划类的 HTML 长文/复盘/教程（用 readable-output）、写代码、开分支、发版打 tag（用 git-push）、定优先级。
 ---
 
 # Issue 池管理（开发范式 v1 · 规划段）
