@@ -1,0 +1,269 @@
+<!doctype html>
+<!--
+课件模板 · 整体复制起手，改内容不改 CSS
+用法：
+1. 改 <title> 和页头三行（kicker / h1 / meta）
+2. 改 .progress 里的讲次 chips（当前讲 class="now"，学过的 class="done"；
+   实操/测验/蒸馏这些收官站也各占一个 chip，但不标 done，学到了再标）
+3. 按需从下面「组件仓库」抄组件（不用的整段删掉）
+4. 底部「课堂作业」区必填 —— 每讲必考
+质量下限（缺任一即返工）：≥3 节 · 每节自己讲透不许"详见原文第X章" · ≥1 个 .analogy · ≥2 个 .yours · 底部 .homework
+红线 5：原文观点和你的推论必须视觉可分——推论进 details 或标「原文没直说，但成立」
+组件：.card 卡片 / .quote 金句 / .analogy 打比方 / .yours 对号入座 / .pitfall 易错点 / details 想一想
+     / table 表格 / .code 代码块 / .vs 两栏对比 / .vs-3 三栏对比 / .flow 流程 / .checklist 清单 / .homework 作业
+-->
+<meta charset="utf-8">
+<title>第 N 讲 · 主题</title>
+<style>
+  :root {
+    --bg: #faf9f7; --card: #ffffff; --ink: #1a1a1a; --ink-2: #555; --ink-3: #888;
+    --line: #e8e5e0; --accent: #0f6b5c; --accent-soft: #e3f0ed; --on-accent: #ffffff;
+    --warn: #b45309; --warn-soft: #fdf3e3; --red: #b3403a; --red-soft: #fbeceb;
+    --green: #27793c; --green-soft: #e6f3e9; --blue: #1d5c9e; --blue-soft: #e7eff8;
+    --quote-bg: #f2efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181a; --card: #1f2225; --ink: #e8e6e3; --ink-2: #b0aeaa; --ink-3: #7d7b77;
+      --line: #33373b; --accent: #4fb39e; --accent-soft: #1d2e2b; --on-accent: #10221f;
+      --warn: #e0a04f; --warn-soft: #2e2619; --red: #e07a75; --red-soft: #2e1d1c;
+      --green: #6cc07e; --green-soft: #1d2b20; --blue: #6ea8dd; --blue-soft: #1c2732;
+      --quote-bg: #24272a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.85; font-size: 16px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+  /* 宽内容页（对比/全景）可改 860~1080px */
+
+  .kicker { color: var(--accent); font-size: 13px; letter-spacing: 2px; font-weight: 600; }
+  h1 { font-size: 30px; line-height: 1.35; margin: 8px 0 6px; }
+  .meta { color: var(--ink-3); font-size: 13px; margin-bottom: 20px; }
+
+  .progress { display: flex; gap: 6px; margin: 18px 0 40px; flex-wrap: wrap; }
+  .progress span {
+    font-size: 12px; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--line); color: var(--ink-3); background: var(--card); white-space: nowrap;
+  }
+  .progress .done { color: var(--accent); border-color: var(--accent); }
+  .progress .now { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+
+  section { margin-bottom: 48px; }
+  .sec-num { color: var(--accent); font-weight: 700; font-size: 13px; letter-spacing: 1px; }
+  h2 { font-size: 22px; margin: 4px 0 14px; line-height: 1.4; }
+  h3 { font-size: 17px; margin: 18px 0 8px; }
+  p { margin: 0 0 14px; }
+  strong { font-weight: 650; }
+  .dim { color: var(--ink-2); }
+
+  .cards { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .card .tag {
+    display: inline-block; font-size: 12px; color: var(--accent); background: var(--accent-soft);
+    border-radius: 6px; padding: 2px 8px; margin-bottom: 8px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 16.5px; }
+  .card p { margin: 0 0 8px; font-size: 15px; color: var(--ink-2); }
+
+  .quote {
+    background: var(--quote-bg); border-left: 4px solid var(--accent); border-radius: 0 12px 12px 0;
+    padding: 18px 22px; margin: 20px 0; font-size: 17px; font-weight: 550; line-height: 1.9;
+  }
+  .quote .src { display: block; font-size: 13px; font-weight: 400; color: var(--ink-3); margin-top: 8px; }
+
+  .analogy {
+    font-size: 14px; color: var(--warn); background: var(--warn-soft);
+    border-radius: 8px; padding: 8px 12px; margin: 8px 0 14px;
+  }
+  .analogy::before { content: "🪞 打个比方 "; font-weight: 600; }
+
+  .yours {
+    font-size: 14.5px; background: var(--accent-soft); border-radius: 8px; padding: 10px 14px; margin: 8px 0 14px;
+  }
+  .yours::before { content: "📌 对号入座 "; font-weight: 700; color: var(--accent); }
+
+  .pitfall {
+    font-size: 14.5px; background: var(--red-soft); border-radius: 8px; padding: 10px 14px; margin: 8px 0 14px;
+  }
+  .pitfall::before { content: "⚠️ 易错点 "; font-weight: 700; color: var(--red); }
+
+  del { color: var(--red); text-decoration-thickness: 2px; }
+
+  .checklist { list-style: none; padding-left: 0; margin: 10px 0 14px; }
+  .checklist li { font-size: 14.5px; color: var(--ink-2); margin-bottom: 6px; }
+  .checklist input { margin-right: 8px; }
+
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 12px 0; }
+  details summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+  details[open] summary { margin-bottom: 8px; }
+  details p { font-size: 14.5px; color: var(--ink-2); margin: 0 0 8px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 14px; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--quote-bg); font-weight: 650; white-space: nowrap; }
+  td { color: var(--ink-2); }
+  .tbl-scroll { overflow-x: auto; }
+
+  .code {
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.95;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; margin: 10px 0; overflow-x: auto; white-space: pre;
+  }
+  .code .c { color: var(--ink-3); }        /* 注释 */
+  .code .k { color: var(--accent); }        /* 关键字 */
+  .code .hl { background: var(--green-soft); border-radius: 4px; padding: 0 3px; }
+
+  .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .vs-3 { grid-template-columns: 1fr 1fr 1fr; }   /* 三栏对比：class="vs vs-3" */
+  @media (max-width: 700px) { .vs-3 { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { .vs { grid-template-columns: 1fr; } }
+  .vs .cell { border-radius: 12px; padding: 16px 18px; border: 1px solid var(--line); background: var(--card); }
+  .vs .cell.bad { border-color: var(--red); }
+  .vs .cell.good { border-color: var(--accent); }
+  .vs h4 { margin: 0 0 8px; font-size: 15px; }
+  .vs .bad h4 { color: var(--red); }
+  .vs .good h4 { color: var(--accent); }
+  .vs p { font-size: 14px; color: var(--ink-2); margin: 0 0 8px; }
+
+  .flow { display: flex; flex-direction: column; gap: 4px; margin: 14px 0; }
+  .flow .step-box {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 10px 14px; font-size: 14.5px; color: var(--ink-2);
+  }
+  .flow .step-box b { color: var(--ink); }
+  .flow .step-box.machine { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+  .flow .step-box.human { border-color: var(--warn); background: var(--warn-soft); color: var(--ink); }
+  .flow .arr { text-align: center; color: var(--ink-3); font-size: 13px; }
+
+  .homework { background: var(--card); border: 2px solid var(--accent); border-radius: 14px; padding: 22px 24px; }
+  .homework h2 { margin-top: 0; }
+  .homework ol { margin: 0; padding-left: 22px; }
+  .homework li { margin-bottom: 12px; }
+  .hint { font-size: 13.5px; color: var(--ink-3); }
+
+  .next { color: var(--ink-3); font-size: 14px; margin-top: 40px; border-top: 1px solid var(--line); padding-top: 16px; }
+</style>
+
+<div class="wrap">
+  <div class="kicker">XX 学习 · 精读系列</div>
+  <h1>第 N 讲 · 主题（用一句有钩子的话，别写成章节名）</h1>
+  <div class="meta">素材：《文章名》· 对应原文第 X 章</div>
+
+  <div class="progress">
+    <span class="done">✓ 1 上一讲</span>
+    <span class="now">2 本讲</span>
+    <span>3 下一讲</span>
+    <span>实操</span>
+    <span>蒸馏</span>
+  </div>
+
+  <!-- ========== 小节：概念讲解 ========== -->
+  <section>
+    <div class="sec-num">第 1 节</div>
+    <h2>小标题：用大白话说这一节要解决什么</h2>
+    <p>正文。抽象概念后面紧跟一个比方。</p>
+    <div class="analogy">跨到用户业务之外的领域打比方（做菜 / 装修验收 / 开店 / 考驾照）——别用用户自己的业务，会和 .yours 混掉。</div>
+    <div class="yours">第一处对号入座：接到用户的现有工具/流程上（每讲 ≥2 处，且要引用用户说过的原话或工具名）。</div>
+    <details>
+      <summary>想一想：一个值得停顿的问题</summary>
+      <p>答案写这里，鼓励用户先自己想再展开。</p>
+    </details>
+  </section>
+
+  <!-- ========== 小节：要点卡片 ========== -->
+  <section>
+    <div class="sec-num">第 2 节</div>
+    <h2>几个并列要点，用卡片</h2>
+    <div class="cards">
+      <div class="card">
+        <span class="tag">要点 ①</span>
+        <h3>一句话结论</h3>
+        <p>展开说明。</p>
+        <div class="analogy">按需配比方。</div>
+      </div>
+      <div class="card">
+        <span class="tag">要点 ②</span>
+        <h3>一句话结论</h3>
+        <p>展开说明。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 小节：对比 / 金句 / 对号入座 ========== -->
+  <section>
+    <div class="sec-num">第 3 节</div>
+    <h2>对比最能讲清差别</h2>
+    <div class="vs">
+      <div class="cell bad"><h4>没有这个机制</h4><p>会发生什么。</p></div>
+      <div class="cell good"><h4>有了这个机制</h4><p>差别在哪。</p></div>
+    </div>
+    <div class="quote">
+      原文金句放这里。
+      <span class="src">—— 原文·第 X 章</span>
+    </div>
+    <div class="yours">把这一节接到用户自己的场景/工具/痛点上——这一步不能省。</div>
+  </section>
+
+  <!-- ========== 组件仓库：用到就抄走，不用整段删掉 ==========
+  <section>
+    <div class="sec-num">组件仓库</div>
+
+    <p>⚠️ 易错点框：</p>
+    <div class="pitfall">最容易读漏的一句：<strong>XXX</strong>。</div>
+
+    <p>三栏对比（class="vs vs-3"）：</p>
+    <div class="vs vs-3">
+      <div class="cell bad"><h4>写法一</h4><p>问题在哪。</p></div>
+      <div class="cell"><h4>写法二</h4><p>中间态。</p></div>
+      <div class="cell good"><h4>写法三</h4><p>为什么它对。</p></div>
+    </div>
+
+    <p>划改（旧写法 → 新写法）：</p>
+    <p><del>Then 金额正确</del> → <strong>Then 结算金额 = 85 元</strong></p>
+
+    <p>可勾选清单：</p>
+    <ul class="checklist">
+      <li><input type="checkbox"> 第一项自查</li>
+      <li><input type="checkbox"> 第二项自查</li>
+    </ul>
+
+    <p>表格（外面务必套 .tbl-scroll，窄屏才不会顶破页面）：</p>
+    <div class="tbl-scroll"><table>
+      <tr><th>维度</th><th>A 方案</th><th>B 方案</th></tr>
+      <tr><td>成本</td><td>低</td><td>高</td></tr>
+    </table></div>
+
+    <p>代码块（.c 注释 / .k 关键字 / .hl 高亮）：</p>
+    <div class="code"><span class="c">// 注释</span>
+<span class="k">function</span> 结算金额(消费, 系数) {
+  <span class="hl">return 消费 / 0.6 * 系数;</span>
+}</div>
+
+    <p>流程（machine=机器动作绿底，human=人的动作黄底，中间用 .arr 箭头）：</p>
+    <div class="flow">
+      <div class="step-box human"><b>人</b>：拍板"系数缺失时阻断还是降级"</div>
+      <div class="arr">↓</div>
+      <div class="step-box machine"><b>机器</b>：跑测试，读退出码判 PASS/FAIL</div>
+      <div class="arr">↓</div>
+      <div class="step-box">普通步骤（不标人/机器时用这个）</div>
+    </div>
+  </section>
+  ========== 组件仓库结束 ========== -->
+
+  <!-- ========== 课堂作业（必填） ========== -->
+  <section class="homework">
+    <div class="sec-num">课堂作业</div>
+    <h2>回答完这两题，进下一讲</h2>
+    <ol>
+      <li><strong>理解题</strong>：用自己的话讲一遍 ______。</li>
+      <li><strong>实操 / 对号入座题</strong>：拿你自己的 ______ 试一遍，发到对话里我来批改。</li>
+    </ol>
+    <p class="hint" style="margin-top:12px">格式提醒（如果这一讲有格式要求，写在这）。</p>
+  </section>
+
+  <div class="next">下一讲预告：<strong>第 N+1 讲 · 主题</strong>——留一个钩子，说清它和用户的什么痛点有关。</div>
+</div>

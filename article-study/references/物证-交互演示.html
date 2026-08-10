@@ -1,0 +1,296 @@
+<meta charset="utf-8">
+<title>交互演示 · 亲手跑一次 TDD 红绿灯</title>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --ink-2: #555;
+    --ink-3: #888;
+    --line: #e8e5e0;
+    --accent: #0f6b5c;
+    --accent-soft: #e3f0ed;
+    --warn: #b45309;
+    --warn-soft: #fdf3e3;
+    --red: #c0392b;
+    --red-soft: #fbeceb;
+    --green: #27793c;
+    --green-soft: #e6f3e9;
+    --quote-bg: #f2efe9;
+    --term-bg: #1d2023;
+    --term-ink: #d7d5d2;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181a;
+      --card: #1f2225;
+      --ink: #e8e6e3;
+      --ink-2: #b0aeaa;
+      --ink-3: #7d7b77;
+      --line: #33373b;
+      --accent: #4fb39e;
+      --accent-soft: #1d2e2b;
+      --warn: #e0a04f;
+      --warn-soft: #2e2619;
+      --red: #e07a75;
+      --red-soft: #2e1d1c;
+      --green: #6cc07e;
+      --green-soft: #1d2b20;
+      --quote-bg: #24272a;
+      --term-bg: #101214;
+      --term-ink: #cfcdca;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.8; font-size: 16px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 40px 24px 80px; }
+  .kicker { color: var(--accent); font-size: 13px; letter-spacing: 2px; font-weight: 600; }
+  h1 { font-size: 28px; line-height: 1.35; margin: 8px 0 6px; }
+  .meta { color: var(--ink-3); font-size: 13px; margin-bottom: 24px; }
+  section { margin-bottom: 44px; }
+  h2 { font-size: 20px; margin: 4px 0 12px; }
+  p { margin: 0 0 12px; }
+  strong { font-weight: 650; }
+  .dim { color: var(--ink-2); }
+
+  .steps {
+    background: var(--card); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 16px 20px; margin-bottom: 26px; font-size: 15px;
+  }
+  .steps b { color: var(--accent); }
+
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 820px) { .stage { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .panel-head {
+    padding: 10px 16px; font-weight: 700; font-size: 14px;
+    border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .chip {
+    font-size: 11.5px; font-weight: 700; border-radius: 6px; padding: 1px 8px; white-space: nowrap;
+  }
+  .chip.g { background: var(--accent-soft); color: var(--accent); }
+  .code {
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.95;
+    padding: 14px 16px; overflow-x: auto; white-space: pre; margin: 0;
+  }
+  .code .c { color: var(--ink-3); }
+  .code .k { color: var(--accent); font-weight: 600; }
+  .code .hl-red { background: var(--red-soft); border-radius: 4px; padding: 0 3px; }
+
+  .impl-switch { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .impl-switch button {
+    font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 999px;
+    border: 1.5px solid var(--line); background: var(--card); color: var(--ink-2); cursor: pointer;
+    font-family: inherit;
+  }
+  .impl-switch button.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+
+  .runbar { display: flex; align-items: center; gap: 14px; margin: 22px 0 10px; flex-wrap: wrap; }
+  #runBtn {
+    font-size: 17px; font-weight: 700; padding: 12px 30px; border-radius: 12px;
+    border: none; background: var(--accent); color: #fff; cursor: pointer; font-family: inherit;
+  }
+  #runBtn:disabled { opacity: .5; cursor: wait; }
+  #runHint { font-size: 14px; color: var(--ink-3); }
+
+  .term {
+    background: var(--term-bg); color: var(--term-ink); border-radius: 12px;
+    padding: 16px 18px; font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13.5px; line-height: 2; min-height: 150px; overflow-x: auto;
+  }
+  .term .prompt { color: #8a8f94; }
+  .term .red { color: #ff8b81; font-weight: 600; }
+  .term .green { color: #7dd68f; font-weight: 600; }
+  .term .sub { color: #9aa0a5; padding-left: 3.5em; display: block; }
+  .term .exit { margin-top: 8px; display: inline-block; border-radius: 6px; padding: 0 10px; font-weight: 700; }
+  .term .exit.e1 { background: #4a231f; color: #ff8b81; }
+  .term .exit.e0 { background: #1d3a26; color: #7dd68f; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; }
+  th, td { border: 1px solid var(--line); padding: 9px 13px; text-align: left; }
+  th { background: var(--quote-bg); }
+  td { color: var(--ink-2); }
+  .tbl-scroll { overflow-x: auto; }
+  .light { font-size: 17px; }
+
+  .analogy {
+    font-size: 14.5px; color: var(--warn); background: var(--warn-soft);
+    border-radius: 10px; padding: 12px 16px; margin: 14px 0;
+  }
+  .analogy::before { content: "🪞 打个比方 "; font-weight: 700; }
+  .quote {
+    background: var(--quote-bg); border-left: 4px solid var(--accent);
+    border-radius: 0 12px 12px 0; padding: 16px 20px; margin: 18px 0;
+    font-size: 16px; font-weight: 550; line-height: 1.9;
+  }
+</style>
+
+<div class="wrap">
+  <div class="kicker">CODING 学习 · 交互演示（第 4 讲配套）</div>
+  <h1>亲手跑一次 TDD 红绿灯</h1>
+  <div class="meta">这个页面里是一个<strong>真的能跑</strong>的最小系统：左边是测试代码，右边是正式代码，下面的按钮真的会执行它们。</div>
+
+  <div class="steps">
+    跟着做：<b>①</b> 先读左边的测试代码（注意：它在实现之前就写好了）→
+    <b>②</b> 右边保持「🈳 空壳版」，点下面的「▶ 跑测试」——亲眼看<b>红</b> →
+    <b>③</b> 切到「❌ 写错版」再跑一次——看红灯怎么<b>抓住写错的 AI</b> →
+    <b>④</b> 切到「✅ 正确版」再跑——<b>绿</b>，考试通过。
+  </div>
+
+  <section>
+    <div class="stage">
+      <!-- 测试代码 -->
+      <div class="panel">
+        <div class="panel-head">📋 测试代码（先写的）<span class="chip g">= 你的两条 Gherkin 场景</span></div>
+        <pre class="code"><span class="c">// 场景①（Given 60 元、系数 0.85 → Then 85 元）</span>
+<span class="k">测试</span>("正常路径：60 × 0.85 → 85 元", () => {
+  <span class="c">// 准备（Given）：消费 60，系数 0.85</span>
+  <span class="c">// 执行（When）：跑结算</span>
+  const 结果 = 结算金额(60, 0.85);
+  <span class="c">// 断言（Then）：必须严格 = 85，否则红灯</span>
+  <span class="k">断言等于</span>(结果, 85);
+});
+
+<span class="c">// 场景②（Given 系数缺失 → Then 阻断，不出账）</span>
+<span class="k">测试</span>("异常边界：系数缺失 → 阻断", () => {
+  <span class="k">断言会报错</span>(() => 结算金额(60, <span class="k">缺失</span>));
+});</pre>
+      </div>
+
+      <!-- 正式代码 -->
+      <div class="panel">
+        <div class="panel-head">⚙️ 正式代码（后写的）——选一个版本</div>
+        <div class="impl-switch">
+          <button id="btn-stub" class="active" onclick="pick('stub')">🈳 空壳版（还没实现）</button>
+          <button id="btn-wrong" onclick="pick('wrong')">❌ 写错版（AI 忘了 ÷0.6）</button>
+          <button id="btn-right" onclick="pick('right')">✅ 正确版</button>
+        </div>
+        <pre class="code" id="implCode"></pre>
+      </div>
+    </div>
+
+    <div class="runbar">
+      <button id="runBtn" onclick="run()">▶ 跑测试</button>
+      <span id="runHint">当前使用：🈳 空壳版 —— 猜猜会几红几绿？</span>
+    </div>
+    <div class="term" id="term"><span class="prompt">$ node 结算.test.js</span><br><span class="prompt">（点上面的「▶ 跑测试」）</span></div>
+  </section>
+
+  <section>
+    <h2>三种状态对照：这就是「红绿灯」的全部含义</h2>
+    <div class="tbl-scroll"><table>
+      <tr><th>正式代码的状态</th><th class="light">灯</th><th>说明</th></tr>
+      <tr><td>🈳 空壳（还没实现）</td><td class="light">🔴🔴</td><td><strong>该红</strong>。功能不存在，测试就该失败。这一步叫「跑红」——先证明这盏灯真的会亮。</td></tr>
+      <tr><td>❌ 写错（忘了 ÷0.6）</td><td class="light">🔴🔴</td><td><strong>灯抓住了 AI</strong>。AI 会自信地说「完成了」，但断言算出 51 ≠ 85，红灯不跟它客气。这就是「不可糊弄」。</td></tr>
+      <tr><td>✅ 正确</td><td class="light">🟢🟢</td><td><strong>可信的绿</strong>。因为你亲眼见过它红，这个绿才有分量。</td></tr>
+    </table></div>
+    <div class="analogy">烟雾报警器装好后，你总得点根烟试试它响不响——万一电池没装，「一直安静」就不是「没火」，而是「聋了」。<strong>跑红 = 给测试本身做的体检。</strong></div>
+    <div class="quote">
+      「跑红」= 实现还不存在时先跑测试，亲眼看它失败。<br>
+      先红 → 证明灯会亮；后绿 → 证明活干完了。<strong>AI 说了不算，灯说了算。</strong>
+    </div>
+    <p class="dim">最后留意终端里的「退出码」：红 = 1，绿 = 0。人看颜色，<strong>机器看这个数字</strong>——第 5 讲的门禁判 PASS/FAIL，读的就是这类信号。</p>
+  </section>
+</div>
+
+<script>
+  const IMPLS = {
+    stub: {
+      label: "🈳 空壳版",
+      hint: "当前使用：🈳 空壳版 —— 猜猜会几红几绿？",
+      code: '<span class="c">// 空壳：函数存在，但什么都不干</span>\nfunction 结算金额(当日消费, 折扣系数) {\n  <span class="c">// TODO：还没实现</span>\n}',
+      fn: function (a, b) { }
+    },
+    wrong: {
+      label: "❌ 写错版",
+      hint: "当前使用：❌ 写错版 —— AI 觉得自己写完了，灯怎么说？",
+      code: '<span class="c">// AI 自信地交付了，但公式抄漏了一步</span>\nfunction 结算金额(当日消费, 折扣系数) {\n  <span class="hl-red">// ← 忘了先 ÷ 0.6 还原！</span>\n  const 金额 = 当日消费 * 折扣系数;\n  return Math.round(金额 * 100) / 100;\n}',
+      fn: function (a, b) { const m = a * b; return Math.round(m * 100) / 100; }
+    },
+    right: {
+      label: "✅ 正确版",
+      hint: "当前使用：✅ 正确版 —— 再跑一次收获绿灯",
+      code: 'function 结算金额(当日消费, 折扣系数) {\n  <span class="k">if</span> (折扣系数 === undefined || 折扣系数 === null) {\n    <span class="k">throw</span> new Error(<span class="c">"折扣系数缺失，阻断结算，不出账"</span>);\n  }\n  const 金额 = (当日消费 / 0.6) * 折扣系数;\n  return Math.round(金额 * 100) / 100; <span class="c">// 四舍五入到分</span>\n}',
+      fn: function (a, b) {
+        if (b === undefined || b === null) throw new Error("折扣系数缺失，阻断结算，不出账");
+        return Math.round((a / 0.6) * b * 100) / 100;
+      }
+    }
+  };
+
+  let current = "stub";
+
+  function pick(key) {
+    current = key;
+    ["stub", "wrong", "right"].forEach(k => {
+      document.getElementById("btn-" + k).className = (k === key) ? "active" : "";
+    });
+    document.getElementById("implCode").innerHTML = IMPLS[key].code;
+    document.getElementById("runHint").textContent = IMPLS[key].hint;
+  }
+
+  const TESTS = [
+    {
+      name: "正常路径：60 × 0.85 → 85 元",
+      run: function (impl) {
+        const r = impl(60, 0.85);
+        if (r !== 85) {
+          const shown = (r === undefined) ? "undefined（什么都没返回）" : r;
+          return "期望 85，实际得到 " + shown;
+        }
+        return null;
+      }
+    },
+    {
+      name: "异常边界：系数缺失 → 阻断",
+      run: function (impl) {
+        try { impl(60, undefined); }
+        catch (e) {
+          if ((e.message || "").indexOf("折扣系数缺失") >= 0) return null;
+          return "报错了，但不是约定的阻断信息";
+        }
+        return "期望阻断报错，实际没有阻断";
+      }
+    }
+  ];
+
+  function run() {
+    const term = document.getElementById("term");
+    const btn = document.getElementById("runBtn");
+    btn.disabled = true;
+    term.innerHTML = '<span class="prompt">$ node 结算.test.js　（' + IMPLS[current].label + '）</span><br>';
+
+    const lines = [];
+    let failed = 0;
+    TESTS.forEach(t => {
+      const err = t.run(IMPLS[current].fn);
+      if (err) {
+        failed++;
+        lines.push('<span class="red">🔴 失败</span>  ' + t.name + '<span class="sub">↳ ' + err + '</span>');
+      } else {
+        lines.push('<span class="green">🟢 通过</span>  ' + t.name);
+      }
+    });
+    lines.push(failed
+      ? '<br>结果：<span class="red">🔴 ' + failed + ' 条失败</span>　<span class="exit e1">退出码 = 1（机器读这个）</span>'
+      : '<br>结果：<span class="green">🟢 全部通过</span>　<span class="exit e0">退出码 = 0（机器读这个）</span>');
+
+    let i = 0;
+    (function next() {
+      if (i < lines.length) {
+        term.innerHTML += lines[i] + "<br>";
+        i++;
+        setTimeout(next, 500);
+      } else {
+        btn.disabled = false;
+      }
+    })();
+  }
+
+  pick("stub");
+</script>

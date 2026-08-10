@@ -1,0 +1,316 @@
+<!doctype html>
+<!--
+测验模板 · 自动判分引擎
+只改这 4 处：① <title> ② 页头三行（kicker/h1/meta）③ 可选的 .case 案例背景块 ④ 底部 QS 数据数组
+JS 逻辑一行别动。
+引擎支持四种题型（type 字段）：
+  single  单选   a: [正确项下标]
+  multi   多选   a: [下标,下标,...]（需点「提交」）
+  order   排序   steps: [按正确顺序排列的步骤文案]，引擎自动打乱展示（固定种子，可复现）
+  write   动手写 placeholder + answer（参考答案）+ selfCheck（自评三问），用户自评计分
+⚠️ 转义铁律：q / snippet / expl 走 innerHTML，凡要显示 < > & 的（Gherkin 的 <参数>、泛型、比较符）
+   必须写成 &lt; &gt; &amp;，否则会被当标签静默吃掉。opts 走 textContent，写 HTML 标签不生效。
+⚠️ 单题选项数上限 8（ABCD 字母表长度）。
+⚠️ 每题 tag 必须写清来源讲次（"第 N 讲 · XX"），跨讲综合题写"第 N-M 讲"——「讲错题」回退全靠这个字段。
+出卷铁律：全部换新场景（不用课件原题）· 每题埋一个诱人的错误选项 · 解析必须点破陷阱在哪
+-->
+<meta charset="utf-8">
+<title>测验 · XX 卷</title>
+<style>
+  :root {
+    --bg: #faf9f7; --card: #ffffff; --ink: #1a1a1a; --ink-2: #555; --ink-3: #888;
+    --line: #e8e5e0; --accent: #0f6b5c; --accent-soft: #e3f0ed;
+    --warn: #b45309; --warn-soft: #fdf3e3; --red: #c0392b; --red-soft: #fbeceb;
+    --green: #27793c; --green-soft: #e6f3e9; --quote-bg: #f2efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181a; --card: #1f2225; --ink: #e8e6e3; --ink-2: #b0aeaa; --ink-3: #7d7b77;
+      --line: #33373b; --accent: #4fb39e; --accent-soft: #1d2e2b; --warn: #e0a04f; --warn-soft: #2e2619;
+      --red: #e07a75; --red-soft: #2e1d1c; --green: #6cc07e; --green-soft: #1d2b20; --quote-bg: #24272a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.75; font-size: 16px;
+  }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 40px 24px 80px; }
+  .kicker { color: var(--accent); font-size: 13px; letter-spacing: 2px; font-weight: 600; }
+  h1 { font-size: 26px; line-height: 1.35; margin: 8px 0 6px; }
+  .meta { color: var(--ink-3); font-size: 13px; margin-bottom: 14px; }
+  .case { background: var(--card); border: 2px solid var(--accent); border-radius: 14px; padding: 16px 20px; font-size: 14.5px; margin-bottom: 10px; }
+  .case b { color: var(--accent); }
+  .scorebar {
+    position: sticky; top: 0; z-index: 5; background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 16px; font-size: 14px; font-weight: 700; margin: 14px 0 26px;
+    display: flex; justify-content: space-between;
+  }
+  .scorebar .s { color: var(--accent); }
+  .q { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 20px; }
+  .q .tag { display: inline-block; font-size: 11.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 1px 8px; margin: 0 6px 8px 0; }
+  .q .tag.m { color: var(--warn); background: var(--warn-soft); }
+  .q h3 { margin: 0 0 12px; font-size: 15.5px; line-height: 1.65; }
+  .snippet {
+    font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.9;
+    background: var(--quote-bg); border-radius: 10px; padding: 12px 16px; margin: 0 0 12px;
+    overflow-x: auto; white-space: pre-wrap; color: var(--ink-2);
+  }
+  .opt {
+    display: block; width: 100%; text-align: left; font-family: inherit; font-size: 14.5px;
+    background: var(--quote-bg); color: var(--ink); border: 1.5px solid var(--line);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; cursor: pointer; line-height: 1.6;
+  }
+  .opt:hover { border-color: var(--accent); }
+  .opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .opt.correct { background: var(--green-soft) !important; border-color: var(--green) !important; font-weight: 600; }
+  .opt.wrong { background: var(--red-soft) !important; border-color: var(--red) !important; }
+  .opt.missed { border-color: var(--green) !important; border-style: dashed !important; }
+  .opt.dis { cursor: default; }
+  .opt .num {
+    display: inline-block; min-width: 24px; height: 24px; border-radius: 50%; background: var(--accent);
+    color: #fff; font-weight: 700; font-size: 13px; text-align: center; line-height: 24px; margin-right: 8px; visibility: hidden;
+  }
+  .opt.picked .num { visibility: visible; }
+  .btn {
+    font-family: inherit; font-size: 14px; font-weight: 700; padding: 8px 20px; border-radius: 10px;
+    border: none; background: var(--accent); color: #fff; cursor: pointer; margin: 4px 8px 0 0;
+  }
+  .btn.ghost { background: var(--card); color: var(--ink-2); border: 1.5px solid var(--line); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  textarea {
+    width: 100%; min-height: 110px; font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 13.5px;
+    background: var(--quote-bg); color: var(--ink); border: 1.5px solid var(--line); border-radius: 10px;
+    padding: 10px 14px; line-height: 1.8; resize: vertical;
+  }
+  .expl { display: none; font-size: 13.5px; color: var(--ink-2); background: var(--accent-soft); border-radius: 8px; padding: 10px 14px; margin-top: 10px; }
+  .expl b { color: var(--accent); }
+  #final { display: none; background: var(--card); border: 2px solid var(--accent); border-radius: 14px; padding: 22px 24px; text-align: center; }
+  #final h2 { color: var(--accent); margin: 0 0 10px; }
+  #final .big { font-size: 40px; font-weight: 800; margin: 6px 0; }
+  #final p { color: var(--ink-2); font-size: 15px; margin: 0 0 8px; }
+</style>
+
+<div class="wrap">
+  <div class="kicker">XX 学习 · 测验</div>
+  <h1>卷名：一句话说清这份卷子考什么</h1>
+  <div class="meta">单选点选项即判分，多选/排序点「提交」，动手写对完答案自评 · 每题只能作答一次 · 做完底部自动出成绩</div>
+
+  <!-- 综合实战卷才需要：统一案例背景。基础/进阶卷删掉这块 -->
+  <div class="case"><b>案例背景</b>：如果整卷围绕同一个案例，在这里交代清楚（含最大风险点）。</div>
+
+  <div class="scorebar"><span>进度：<span class="s" id="done">0</span> / <span id="total">0</span></span><span>得分：<span class="s" id="score">0</span></span></div>
+  <div id="quiz"></div>
+
+  <div id="final">
+    <h2>🎓 成绩</h2>
+    <div class="big" id="finalScore"></div>
+    <p id="finalMsg"></p>
+    <p style="font-size:13.5px">把分数和错题号发回当前对话，一起讲错题。</p>
+  </div>
+</div>
+
+<script>
+  /* ============ 只改这个数组 ============ */
+  const QS = [
+    {
+      type: "single",
+      tag: "第 1 讲 · 概念",
+      q: "题干：换一个新场景来考同一个原理。",
+      snippet: "",                       // 可选：代码/数据/文档片段
+      opts: ["干扰项", "正确项", "诱人的错误项（重点设计）", "干扰项"],
+      a: [1],
+      expl: "解析：<b>点破陷阱在哪</b>——为什么那个诱人的选项是错的。"
+    },
+    {
+      type: "multi",
+      tag: "第 2 讲 · 找茬",
+      q: "选出所有毛病（多选，选完点提交）：",
+      snippet: "把一段写坏的材料贴在这里",
+      opts: ["毛病 A", "毛病 B", "看似是毛病其实合法的陷阱项", "毛病 D"],
+      a: [0, 1, 3],
+      expl: "正确答案 A、B、D。<b>C 是陷阱</b>：说清它为什么合法。"
+    },
+    {
+      type: "order",
+      tag: "第 1-4 讲 · 全流程排序",     // tag 必须含讲次——错题回退靠它定位
+      q: "把下面的步骤按正确顺序依次点击（点错可「重排」）：",
+      steps: ["第一步", "第二步", "第三步", "第四步"],
+      expl: "正确顺序：…。要点：<b>哪两步的先后最容易搞反</b>。"
+    },
+    {
+      type: "write",
+      tag: "第 3 讲 · 契约",          // tag 写讲次即可，题型 chip 引擎会自动加，别重复写
+      q: "按要求写一段（写完对照参考答案，按三问自评）：",
+      snippet: "给出原材料/规则",
+      placeholder: "在这里写…",
+      answer: "参考答案写这里。",
+      selfCheck: "① 自评问题一？② 自评问题二？③ 自评问题三？三问全过才算合格。"
+    }
+  ];
+  /* ===================================== */
+
+  let done = 0, score = 0;
+  const quiz = document.getElementById("quiz");
+  const ABCD = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+  // 固定种子洗牌：可复现（不用 Math.random，避免刷新一次换一种排法），且对任意长度都是真打乱
+  function shuffledOrder(n) {
+    const a = Array.from({ length: n }, (_, i) => i);
+    let s = 20260806;                       // 换这个数就换一种排法
+    const rnd = () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(rnd() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  document.getElementById("total").textContent = QS.length;
+
+  function finish(box, right) {
+    box.querySelector(".expl").style.display = "block";
+    done++; if (right) score++;
+    document.getElementById("done").textContent = done;
+    document.getElementById("score").textContent = score;
+    if (done === QS.length) {
+      const f = document.getElementById("final");
+      document.getElementById("finalScore").textContent = score + " / " + QS.length;
+      const r = score / QS.length;
+      document.getElementById("finalMsg").textContent =
+        r === 1 ? "满分！可以进下一站了。" :
+        r >= 0.8 ? "优秀——错题看解析即可。" :
+        r >= 0.6 ? "良好——错题对应的讲次回翻一遍课件。" :
+                   "把错题发回当前对话，逐题讲透再往前走。";
+      f.style.display = "block";
+      f.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  QS.forEach((item, qi) => {
+    const box = document.createElement("div");
+    box.className = "q";
+    let head = '<span class="tag">' + (item.tag || "") + '</span>';
+    if (item.type === "multi") head += '<span class="tag m">多选</span>';
+    if (item.type === "order") head += '<span class="tag m">排序</span>';
+    if (item.type === "write") head += '<span class="tag m">动手写 · 自评</span>';
+    box.innerHTML = head + '<h3>' + (qi + 1) + '. ' + item.q + '</h3>' +
+      (item.snippet ? '<div class="snippet">' + item.snippet + '</div>' : '');
+
+    if (item.type === "single" || item.type === "multi") {
+      item.opts.forEach((opt, oi) => {
+        const b = document.createElement("button");
+        b.className = "opt";
+        b.textContent = ABCD[oi] + ". " + opt;
+        b.onclick = () => {
+          if (box.dataset.done) return;
+          if (item.type === "single") {
+            box.dataset.done = "1";
+            box.querySelectorAll(".opt").forEach((o, i) => {
+              o.classList.add("dis");
+              if (item.a.includes(i)) o.classList.add("correct");
+            });
+            const right = item.a.includes(oi);
+            if (!right) b.classList.add("wrong");
+            finish(box, right);
+          } else {
+            b.classList.toggle("sel");
+          }
+        };
+        box.appendChild(b);
+      });
+      if (item.type === "multi") {
+        const sb = document.createElement("button");
+        sb.className = "btn"; sb.textContent = "提交";
+        sb.onclick = () => {
+          if (box.dataset.done) return;
+          const opts = [...box.querySelectorAll(".opt")];
+          const chosen = opts.map((o, i) => o.classList.contains("sel") ? i : -1).filter(i => i >= 0);
+          if (!chosen.length) { sb.textContent = "先选至少一项再提交"; return; }   // 空选防呆：误点一次不该锁死整题
+          box.dataset.done = "1";
+          const num = (x, y) => x - y;
+          const right = chosen.slice().sort(num).join() === item.a.slice().sort(num).join();
+          opts.forEach((o, i) => {
+            o.classList.add("dis");
+            const should = item.a.includes(i), did = chosen.includes(i);
+            if (should && did) o.classList.add("correct");
+            else if (!should && did) o.classList.add("wrong");
+            else if (should && !did) o.classList.add("missed");
+          });
+          finish(box, right);
+        };
+        box.appendChild(sb);
+      }
+    }
+
+    if (item.type === "order") {
+      const listWrap = document.createElement("div");
+      box.appendChild(listWrap);
+      const submit = document.createElement("button");
+      submit.className = "btn"; submit.textContent = "提交"; submit.disabled = true;
+      const reset = document.createElement("button");
+      reset.className = "btn ghost"; reset.textContent = "重排";
+      let picked = [];
+      const uniq = shuffledOrder(item.steps.length);   // uniq[展示位] = 该位显示的步骤原序号
+      function render() {
+        listWrap.innerHTML = "";
+        uniq.forEach(si => {
+          const b = document.createElement("button");
+          b.className = "opt";
+          b.innerHTML = '<span class="num"></span>' + item.steps[si];
+          b.onclick = () => {
+            if (box.dataset.done || b.classList.contains("picked")) return;
+            b.classList.add("picked");
+            picked.push(si);
+            b.querySelector(".num").textContent = picked.length;
+            submit.disabled = picked.length !== item.steps.length;
+          };
+          listWrap.appendChild(b);
+        });
+      }
+      reset.onclick = () => { if (!box.dataset.done) { picked = []; submit.disabled = true; render(); } };
+      submit.onclick = () => {
+        if (box.dataset.done) return;
+        box.dataset.done = "1";
+        const right = picked.every((v, i) => v === i);
+        [...listWrap.querySelectorAll(".opt")].forEach((o, idx) => {
+          o.classList.add("dis");
+          const si = uniq[idx];
+          o.classList.add(picked.indexOf(si) === si ? "correct" : "wrong");
+        });
+        submit.disabled = true;
+        finish(box, right);
+      };
+      render();
+      box.appendChild(submit); box.appendChild(reset);
+    }
+
+    if (item.type === "write") {
+      const ta = document.createElement("textarea");
+      ta.placeholder = item.placeholder || "在这里写…";
+      box.appendChild(ta);
+      const reveal = document.createElement("button");
+      reveal.className = "btn"; reveal.textContent = "写完了，对照参考答案";
+      const pass = document.createElement("button");
+      pass.className = "btn"; pass.textContent = "三问全过 +1 分"; pass.style.display = "none";
+      const fail = document.createElement("button");
+      fail.className = "btn ghost"; fail.textContent = "没全过，0 分"; fail.style.display = "none";
+      reveal.onclick = () => {
+        if (!ta.value.trim()) { ta.placeholder = "先写再对答案——空白提交是自欺 :)"; return; }
+        box.querySelector(".expl").style.display = "block";
+        reveal.disabled = true; pass.style.display = ""; fail.style.display = "";
+      };
+      pass.onclick = () => { if (!box.dataset.done) { box.dataset.done = "1"; pass.disabled = fail.disabled = true; finish(box, true); } };
+      fail.onclick = () => { if (!box.dataset.done) { box.dataset.done = "1"; pass.disabled = fail.disabled = true; finish(box, false); } };
+      box.appendChild(reveal); box.appendChild(pass); box.appendChild(fail);
+    }
+
+    const ex = document.createElement("div");
+    ex.className = "expl";
+    ex.innerHTML = item.type === "write"
+      ? "💡 <b>参考答案</b>：" + item.answer + "<br><br><b>自评三问</b>：" + item.selfCheck
+      : "💡 " + item.expl;
+    box.appendChild(ex);
+    quiz.appendChild(box);
+  });
+</script>

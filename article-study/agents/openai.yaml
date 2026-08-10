@@ -1,0 +1,4 @@
+interface:
+  display_name: "文章精读"
+  short_description: "带你精读具体材料，用课件、复述校准和测验确认真正学会"
+  default_prompt: "使用 $article-study 带我精读这篇材料，并通过每讲考核确认我真正学会。"
