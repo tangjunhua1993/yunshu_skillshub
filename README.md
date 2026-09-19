@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="./assets/readme/hero.png" width="100%" alt="云舒的 Skills 搭子们：狗子 IP 与 36 个面向产品、开发、研究、写作和效率场景的 Agent Skills" />
+  <img src="./assets/readme/hero.png" width="100%" alt="云舒的 Skills 搭子们：狗子 IP 与 38 个面向产品、开发、研究、写作和效率场景的 Agent Skills" />
 </p>
 
 # Yunshu SkillsHub
@@ -14,12 +14,12 @@
   <a href="https://github.com/yunshu0909/yunshu_skillshub/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/yunshu0909/yunshu_skillshub?style=flat-square&color=4E63D9" /></a>
   <a href="https://github.com/yunshu0909/yunshu_skillshub/network/members"><img alt="GitHub Forks" src="https://img.shields.io/github/forks/yunshu0909/yunshu_skillshub?style=flat-square&color=1FA884" /></a>
   <a href="./LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-172033?style=flat-square" /></a>
-  <img alt="36 installable skills" src="https://img.shields.io/badge/skills-36_installable-F6F3EA?style=flat-square&labelColor=172033" />
+  <img alt="38 installable skills" src="https://img.shields.io/badge/skills-38_installable-F6F3EA?style=flat-square&labelColor=172033" />
 </p>
 
 这里不是一叠孤立的提示词。每个 Skill 都用 `SKILL.md` 固化触发条件、工作阶段、确认门槛和交付物，让 Codex、Claude Code 等 Agent 在产品、开发、研究、写作和日常效率任务中按同一套方法工作。
 
-> 当前仓库可被 `skills` CLI 识别出 **36 个 Skill**：其中 **35 个推荐使用**，`plan-report` 已并入 `issue-pool`，作为历史兼容目录保留。
+> 当前仓库可被 `skills` CLI 识别出 **38 个 Skill**：其中 **37 个推荐使用**，`plan-report` 已并入 `issue-pool`，作为历史兼容目录保留。
 
 ## 一条真实的交付链路
 
@@ -80,7 +80,7 @@ npx skills add yunshu0909/yunshu_skillshub --skill issue-pool
 
 如果你还不知道名字，从现在遇到的问题开始找。
 
-### 产品与需求 · 9
+### 产品与需求 · 10
 
 | Skill | 什么时候用 | 主要产物 |
 | --- | --- | --- |
@@ -90,6 +90,7 @@ npx skills add yunshu0909/yunshu_skillshub --skill issue-pool
 | [`issue-pool`](./issue-pool) | 把想法或反馈收敛成可开工 task | Issue、task、滚动计划 |
 | [`version-planner`](./version-planner) | 把需求拆成 MVP 到 V1.0 | 渐进式版本路线 |
 | [`design-exploration`](./design-exploration) | 新功能需要先探索交互与状态 | ASCII 方案、HTML 设计稿、实现契约 |
+| [`page-solution-design`](./page-solution-design) | 一个页面要整页重做、替换或从零设计 | 三层法方案、全状态高保真、交互流程图与定稿包 |
 | [`prd-doc-writer`](./prd-doc-writer) | 需要故事驱动的 PRD | 用户故事、验收标准、图表 |
 | [`prd-test-writer`](./prd-test-writer) · Beta | PRD 与测试用例必须对齐 | PRD、测试用例、双 review HTML |
 | [`req-change-workflow`](./req-change-workflow) | 在现有代码上安全改需求 | 变更简报、影响评估、回归证据 |
@@ -118,7 +119,7 @@ npx skills add yunshu0909/yunshu_skillshub --skill issue-pool
 | [`thinking-partner`](./thinking-partner) | 局面混乱，不知道核心卡点 | 问题诊断、共创解法、行动计划 |
 | [`priority-judge`](./priority-judge) | 待办太多，不知道先做什么 | 优先级判断与当前行动 |
 
-### 内容与表达 · 7
+### 内容与表达 · 8
 
 | Skill | 什么时候用 | 主要产物 |
 | --- | --- | --- |
@@ -126,6 +127,7 @@ npx skills add yunshu0909/yunshu_skillshub --skill issue-pool
 | [`writing-assistant`](./writing-assistant) | 从选题、框架一路写到成稿 | 结构清晰的文章 |
 | [`readable-output`](./readable-output) | 要把复杂内容整理给人阅读 | 高可读 HTML 长文 |
 | [`image-assistant`](./image-assistant) | 文章、PPT 或社媒内容需要配图 | Copy Spec 与生图提示词 |
+| [`logo-design`](./logo-design) · 需 Codex | 产品或品牌需要设计、诊断、精修 Logo | 方向探索、受控精修、应用图标与可用资产 |
 | [`lesson-builder`](./lesson-builder) | 需要快速备课或制作培训材料 | 课程大纲与课件 |
 | [`weekly-report`](./weekly-report) | 要把一周工作讲清价值与边界 | 结构化周报 |
 | [`hermes-persona-builder`](./hermes-persona-builder) | 为 Hermes 或陪伴型 Agent 创建人设 | 可直接使用的 `SOUL.md` |
@@ -166,7 +168,7 @@ npx skills add yunshu0909/yunshu_skillshub --skill issue-pool
 
 ## 兼容性与仓库结构
 
-仓库采用标准的 `SKILL.md` 目录约定，已验证 `skills` CLI 可以发现全部 36 个 Skill。不同 Agent 的工具能力并不完全相同；涉及浏览器、联网、图像生成或多 Agent 的 Skill，会以各自 `SKILL.md` 中的依赖和降级规则为准。
+仓库采用标准的 `SKILL.md` 目录约定，已验证 `skills` CLI 可以发现全部 38 个 Skill。不同 Agent 的工具能力并不完全相同；涉及浏览器、联网、图像生成或多 Agent 的 Skill，会以各自 `SKILL.md` 中的依赖和降级规则为准。
 
 ```text
 <skill-name>/

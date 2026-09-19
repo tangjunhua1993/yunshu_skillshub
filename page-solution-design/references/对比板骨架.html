@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>对比板骨架 · 同一模块多版并排</title>
+<style>
+  /* 用法：
+     1. 改 :root 里四个数：窗口宽高、侧栏宽（去主进程 BrowserWindow 与布局组件查）、--scale。
+        --scale 按「一行放几版」反算：grid 一行 2 版取 .5，3 版取 .33，窗口越大取越小，否则板子挤成一团。
+     2. 板头写「本板前提：固定 ___，只变 ___」——前提是没被检验的假设，用户否板时指着它拆。
+     3. 每版填 vary（只变的那一件事）和 read（一句读法）；recommend 填推荐编号和一句理由。
+     4. 结构草图用 gray: true（灰框无色）；单组件 / 配色对比用 noShell: true（不套窗口壳）；两者可同用。
+     5. 全状态板复用本骨架：premise 改写成「页面类型 + 真实/构造数据说明」，recommend 的 id 留空则不渲染推荐条。 */
+  :root { --win-w: 1000; --win-h: 680; --sidebar: 180px; --scale: .44; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e6e6ea; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: #222; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 28px 24px 60px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .lead { font-size: 13px; color: #666; margin: 0 0 6px; line-height: 20px; }
+  .premise { font-size: 13px; color: #333; margin: 0 0 22px; padding: 8px 12px; background: #fff; border-radius: 8px; border: 1px solid #ccc; }
+  .premise b { color: #111; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(var(--win-w) * var(--scale) * 1px), 1fr)); gap: 24px; }
+  .cell h3 { font-size: 14px; margin: 0 0 3px; display: flex; align-items: center; gap: 8px; }
+  .cell h3 code { font: 600 11px ui-monospace, Menlo, monospace; background: #111; color: #fff; padding: 1px 6px; border-radius: 4px; }
+  .cell h3 .rec { font-size: 10px; color: #fff; background: #2b7fff; padding: 1px 6px; border-radius: 999px; }
+  .cell .meta { font-size: 12px; color: #666; line-height: 17px; margin-bottom: 8px; min-height: 34px; }
+  .cell .meta b { color: #333; font-weight: 500; }
+  .frame { background: #fff; border-radius: 10px; box-shadow: 0 0 0 .5px rgba(0,0,0,.18), 0 12px 32px rgba(0,0,0,.12); overflow: hidden; }
+  .frame.win-frame { width: calc(var(--win-w) * var(--scale) * 1px); height: calc(var(--win-h) * var(--scale) * 1px); }
+  .frame:not(.win-frame) { width: calc(var(--win-w) * var(--scale) * 1px); padding: 16px; }
+  .win { width: calc(var(--win-w) * 1px); height: calc(var(--win-h) * 1px); display: grid; grid-template-columns: var(--sidebar) 1fr; transform: scale(var(--scale)); transform-origin: 0 0; font-size: 13px; }
+  .sidebar { background: #f2f2f5; box-shadow: inset -.5px 0 0 rgba(0,0,0,.12); padding: 0 8px; }
+  .lights { height: 52px; display: flex; align-items: center; gap: 8px; padding-left: 6px; }
+  .lights i { width: 12px; height: 12px; border-radius: 50%; background: #d0d0d4; }
+  .content { display: flex; flex-direction: column; background: #fff; min-width: 0; }
+  .toolbar { height: 52px; background: #f2f2f5; box-shadow: inset 0 -.5px 0 rgba(0,0,0,.12); display: flex; align-items: center; padding: 0 16px; font-size: 15px; font-weight: 600; }
+  .scroll { flex: 1; padding: 14px 20px; overflow: hidden; }
+  /* 灰框结构草图 */
+  .gray, .gray * { color: #555 !important; }
+  .gray .bx { border: 1.5px dashed #b0b0b0; border-radius: 7px; padding: 9px 11px; background: #fafafa; }
+  .gray .bar { height: 6px; background: #e4e4e4; border-radius: 3px; }
+  .gray .bar i { display: block; height: 100%; background: #666; border-radius: 3px; }
+  .verdict { margin-top: 24px; padding: 12px 14px; background: #111; color: #fff; border-radius: 10px; font-size: 13px; }
+  .verdict b { color: #9cc4ff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>标题 · 只变的那一件事</h1>
+  <p class="lead">固定什么、只变什么、怎么读。</p>
+  <div class="premise" id="premise"></div>
+  <div class="grid" id="grid"></div>
+  <div class="verdict" id="verdict"></div>
+</div>
+<script>
+  const board = {
+    premise: { fixed: '固定的东西（外壳、内容、其他区域）', vary: '只变的那一件事' },
+    recommend: { id: '2', why: '一句理由' },
+    variants: [
+      { id: '1', name: '方案名', vary: '变量取值', read: '一句读法', gray: false, noShell: false, render: () => '<div>模块内容</div>' },
+      { id: '2', name: '方案名', vary: '变量取值', read: '一句读法', gray: false, noShell: false, render: () => '<div>模块内容</div>' },
+    ],
+  };
+  const shell = (inner, gray) => `<div class="win ${gray ? 'gray' : ''}"><aside class="sidebar"><div class="lights"><i></i><i></i><i></i></div></aside><main class="content"><div class="toolbar">页面标题</div><div class="scroll">${inner}</div></main></div>`;
+  document.getElementById('premise').innerHTML = `<b>本板前提：</b>固定 ${board.premise.fixed}，只变 ${board.premise.vary}`;
+  document.getElementById('grid').innerHTML = board.variants.map(v => `
+    <div class="cell"><h3><code>${v.id}</code>${v.name}${v.id === board.recommend.id ? '<span class="rec">推荐</span>' : ''}</h3><div class="meta"><b>变量</b> ${v.vary}<br>${v.read}</div>
+      <div class="frame ${v.noShell ? '' : 'win-frame'} ${v.noShell && v.gray ? 'gray' : ''}">${v.noShell ? v.render() : shell(v.render(), v.gray)}</div></div>`).join('');
+  const v = document.getElementById('verdict');
+  if (board.recommend && board.recommend.id) v.innerHTML = `推荐 <b>${board.recommend.id}</b> · ${board.recommend.why}`; else v.remove();
+</script>
+</body>
+</html>

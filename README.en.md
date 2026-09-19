@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img src="./assets/readme/hero.png" width="100%" alt="Yunshu's Skills crew: the dog mascot with 36 agent skills for product, engineering, research, writing, and personal productivity" />
+  <img src="./assets/readme/hero.png" width="100%" alt="Yunshu's Skills crew: the dog mascot with 38 agent skills for product, engineering, research, writing, and personal productivity" />
 </p>
 
 # Yunshu SkillsHub
@@ -14,12 +14,12 @@ Turn fuzzy requests into reusable, executable, and verifiable AI workflows.
   <a href="https://github.com/yunshu0909/yunshu_skillshub/stargazers"><img alt="GitHub Stars" src="https://img.shields.io/github/stars/yunshu0909/yunshu_skillshub?style=flat-square&color=4E63D9" /></a>
   <a href="https://github.com/yunshu0909/yunshu_skillshub/network/members"><img alt="GitHub Forks" src="https://img.shields.io/github/forks/yunshu0909/yunshu_skillshub?style=flat-square&color=1FA884" /></a>
   <a href="./LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-172033?style=flat-square" /></a>
-  <img alt="36 installable skills" src="https://img.shields.io/badge/skills-36_installable-F6F3EA?style=flat-square&labelColor=172033" />
+  <img alt="38 installable skills" src="https://img.shields.io/badge/skills-38_installable-F6F3EA?style=flat-square&labelColor=172033" />
 </p>
 
 This is not a pile of disconnected prompts. Each Skill uses `SKILL.md` to preserve its triggers, stages, decision gates, constraints, and deliverables so agents such as Codex and Claude Code can apply the same method repeatedly.
 
-> The `skills` CLI discovers **36 installable Skills** in this repository: **35 are recommended**, while `plan-report` is retained for compatibility after its workflow moved into `issue-pool`.
+> The `skills` CLI discovers **38 installable Skills** in this repository: **37 are recommended**, while `plan-report` is retained for compatibility after its workflow moved into `issue-pool`.
 
 ## A real delivery path
 
@@ -78,7 +78,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/find-top-th
 
 ## Find a Skill by the problem
 
-### Product and requirements · 9
+### Product and requirements · 10
 
 | Skill | Use it when | Main output |
 | --- | --- | --- |
@@ -88,6 +88,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/find-top-th
 | [`issue-pool`](./issue-pool) | Ideas or feedback must become buildable tasks | Issues, tasks, rolling plans |
 | [`version-planner`](./version-planner) | Requirements need an MVP-to-V1.0 path | Progressive release plan |
 | [`design-exploration`](./design-exploration) | A new feature needs interaction and state exploration | ASCII options, HTML mockups, implementation contract |
+| [`page-solution-design`](./page-solution-design) | A page needs a full redesign, replacement, or a from-scratch design | Three-layer plan, full-state hi-fi mockups, interaction flow, and a handoff package |
 | [`prd-doc-writer`](./prd-doc-writer) | You need a story-driven PRD | User stories, acceptance criteria, diagrams |
 | [`prd-test-writer`](./prd-test-writer) · Beta | PRD and tests must stay aligned | PRD, test cases, two review pages |
 | [`req-change-workflow`](./req-change-workflow) | An existing codebase needs a safe requirement change | Change brief, impact analysis, regression evidence |
@@ -116,7 +117,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/find-top-th
 | [`thinking-partner`](./thinking-partner) | The situation is messy and the bottleneck is unclear | Diagnosis, co-created solution, action plan |
 | [`priority-judge`](./priority-judge) | Too many tasks compete for attention | Priority decision and next action |
 
-### Content and expression · 7
+### Content and expression · 8
 
 | Skill | Use it when | Main output |
 | --- | --- | --- |
@@ -124,6 +125,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/find-top-th
 | [`writing-assistant`](./writing-assistant) | You need a path from topic to finished draft | A structured article |
 | [`readable-output`](./readable-output) | Complex material must become easy to read | High-readability HTML document |
 | [`image-assistant`](./image-assistant) | Articles, slides, or social posts need visuals | Copy spec and image prompts |
+| [`logo-design`](./logo-design) · Requires Codex | A product or brand needs a logo designed, diagnosed, or refined | Direction exploration, controlled refinement, app icons, and usable assets |
 | [`lesson-builder`](./lesson-builder) | A class or training session needs preparation | Lesson outline and teaching material |
 | [`weekly-report`](./weekly-report) | Weekly work needs a clear value narrative | Structured weekly report |
 | [`hermes-persona-builder`](./hermes-persona-builder) | Hermes or a companion agent needs a durable persona | Ready-to-use `SOUL.md` |
@@ -162,7 +164,7 @@ You can also name a Skill directly: `/issue-pool`, `/goal-setter`, `/find-top-th
 
 ## Compatibility and repository shape
 
-The repository follows the `SKILL.md` directory convention, and the `skills` CLI discovers all 36 Skills. Agent toolsets differ; Skills that need browsing, image generation, browser control, or multiple agents follow the dependencies and fallback rules documented in their own `SKILL.md`.
+The repository follows the `SKILL.md` directory convention, and the `skills` CLI discovers all 38 Skills. Agent toolsets differ; Skills that need browsing, image generation, browser control, or multiple agents follow the dependencies and fallback rules documented in their own `SKILL.md`.
 
 ```text
 <skill-name>/

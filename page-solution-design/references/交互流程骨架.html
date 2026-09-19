@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>交互流程骨架 · 把状态窗口串起来</title>
+<style>
+  /* 用法（规则与道理见 SKILL 第 5b 步，这里只写代码怎么接）：
+     1. 把定稿稿「状态 → HTML」的渲染接到 page(s) / overlay(s) / win(s)；流程节点和下方状态目录都用 win(s)，不另画。
+        浮在页面上的中间画面（确认弹窗、Toast）画进 overlay(s)；页面内的（按钮「xx 中...」、行内保存中、禁用）做成 page(s) 的状态字段。
+     2. 改 :root 的六个数（去主进程与布局代码查窗口尺寸）：
+        --fl-win-w / --fl-win-h 窗口宽高；--fl-cx / --fl-cy 缩略图裁掉的左侧与顶部（默认 = 侧栏宽、工具栏高；没有侧栏就填 0）；
+        --fl-crop-h 缩略图露出的内容高度，默认 = 窗口高 − 工具栏高，改小会裁掉底部的 Toast；
+        --fl-k 缩放比例 = max(.5, 7 ÷ 页面最小字号)，保证缩略后最小的字不小于 7px（本示例最小 11.5px → .65）。
+        要点的位置在工具栏或侧栏时，给那个节点传 full: true，它不裁。
+     3. SEL 登记「下一步要点的位置」：选择器在单个窗口内匹配，取第一个命中；同一个键可以跨状态复用。没命中会在控制台警告。
+     4. 写 FLOWS。N(编号, 一句状态说明, 状态, { hot, ref, end, full })：ref 写状态清单编号（类字母 + 序号，如 C6，见 references/状态清单模板.md）；
+        end 标这条路的终点，取 'ok' / 'bad' / 'neutral'，框色跟结果走。A(动作或事件, 颜色, 小字)。NOTE(文字)。
+        一个 lane 可以直接以 A 开头；从某节点分出的 lane 写 from: '从 <b>X-Y</b> 分出'。
+        同一步的其他结果放 FAN(B(条件, 颜色, 节点), B(...))，一个 FAN 可以并排多个 B；FAN 里的节点要继续往下走，另开一个 lane 从它分出。
+     5. 本文件和对比板骨架合进同一份 HTML 时：本文件的变量与类名都带 fl- 前缀，不冲突；删掉「示例页面」段，换成你的页面壳。 */
+  :root { --fl-win-w: 800; --fl-win-h: 600; --fl-cx: 180; --fl-cy: 52; --fl-crop-h: 548; --fl-k: .65; }
+  body { margin: 0; background: #e6e6ea; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; font-size: 13px; color: #1d1d1f; -webkit-font-smoothing: antialiased; }
+  .fl-stage { padding: 28px 24px 60px; }
+  .fl-stage h1 { font-size: 18px; margin: 0 0 4px; }
+  .fl-stage > h2 { font-size: 18px; margin: 28px 0 6px; }
+  .fl-stage .fl-lead { font-size: 13px; color: #666; margin: 0 0 18px; line-height: 20px; }
+
+  /* ===== 示例页面（换成你的页面壳与渲染；示例类名带 sk- 前缀，免得和真实页面的类名混在一起） ===== */
+  .sk-win { width: calc(var(--fl-win-w) * 1px); height: calc(var(--fl-win-h) * 1px); display: grid; grid-template-columns: 180px 1fr; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 .5px rgba(0,0,0,.2), 0 12px 32px rgba(0,0,0,.12); box-sizing: border-box; }
+  .sk-side { background: #f2f2f5; box-shadow: inset -.5px 0 0 rgba(0,0,0,.12); }
+  .sk-main { position: relative; display: flex; flex-direction: column; min-width: 0; }
+  .sk-bar { height: 52px; flex: none; background: #f2f2f5; box-shadow: inset 0 -.5px 0 rgba(0,0,0,.12); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 15px; font-weight: 600; }
+  .sk-body { padding: 14px 20px; }
+  .sk-card { background: #f2f2f7; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .sk-btn { appearance: none; border: 0; font: inherit; height: 24px; padding: 0 10px; border-radius: 6px; background: #fff; box-shadow: 0 0 0 .5px rgba(0,0,0,.14), 0 1px 1px rgba(0,0,0,.06); display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 500; }
+  .sk-btn.sk-pri { background: #2b7fff; color: #fff; }
+  .sk-btn:disabled { opacity: .5; }
+  .sk-skel { height: 12px; width: 120px; border-radius: 4px; background: rgba(0,0,0,.07); }
+  .sk-err { color: #d93025; font-size: 12px; }
+  /* 演示层叠加：现有 Toast / 确认弹窗的示意，定稿文档写明实现用哪个组件，不移植 */
+  .sk-toast { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 500; color: #fff; white-space: nowrap; z-index: 40; }
+  .sk-toast.sk-ok { background: #16a34a; } .sk-toast.sk-bad { background: #dc2626; }
+  .sk-mask { position: absolute; inset: 0; background: rgba(0,0,0,.35); display: grid; place-items: center; z-index: 30; }
+  .sk-modal { width: 360px; background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 8px 40px rgba(0,0,0,.15); line-height: 20px; }
+  .sk-modal-ft { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+
+  /* ===== 交互流程（通用，换页不用改） ===== */
+  .fl-legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 12.5px; color: #444; margin: 0 0 22px; padding: 10px 14px; background: #fff; border-radius: 10px; box-shadow: 0 0 0 .5px rgba(0,0,0,.12); }
+  .fl-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .fl-legend i { width: 22px; border-top: 2.5px solid var(--c); }
+  .fl-legend em { font-style: normal; outline: 3px dashed #7c3aed; outline-offset: 1px; border-radius: 3px; padding: 0 4px; font-size: 11px; }
+  .fl-legend b { width: 14px; height: 10px; border-radius: 3px; box-shadow: 0 0 0 2px var(--c); }
+  .fl-flow { background: #f7f7f9; border-radius: 16px; padding: 18px 20px 20px; margin-bottom: 28px; box-shadow: 0 0 0 .5px rgba(0,0,0,.1); overflow-x: auto; }
+  .fl-flow h2 { font-size: 16px; margin: 0 0 4px; }
+  .fl-q { font-size: 12.5px; color: #555; margin: 0 0 14px; line-height: 19px; }
+  .fl-q b { color: #111; }
+  .fl-lane { display: flex; align-items: flex-start; margin-top: 16px; min-width: max-content; }
+  .fl-from { flex: none; width: 88px; font-size: 12px; color: #555; line-height: 17px; padding-top: calc(var(--fl-crop-h) * var(--fl-k) * .45px); }
+  .fl-from b { color: #111; }
+  .fl-node { flex: none; width: calc((var(--fl-win-w) - var(--fl-cx)) * var(--fl-k) * 1px); }
+  .fl-thumb { position: relative; width: 100%; height: calc(var(--fl-crop-h) * var(--fl-k) * 1px); overflow: hidden; border-radius: 8px; background: #fff; cursor: zoom-in; box-shadow: 0 0 0 .5px rgba(0,0,0,.2), 0 6px 18px rgba(0,0,0,.1); }
+  .fl-thumb:hover { box-shadow: 0 0 0 2px #0a66e8, 0 6px 18px rgba(0,0,0,.1); }
+  .fl-thumb > :first-child { position: absolute; left: calc(var(--fl-cx) * var(--fl-k) * -1px); top: calc(var(--fl-cy) * var(--fl-k) * -1px); transform: scale(var(--fl-k)) !important; transform-origin: 0 0; border-radius: 0; box-shadow: none; }
+  .fl-end-ok .fl-thumb { box-shadow: 0 0 0 2px #30a14e, 0 6px 18px rgba(0,0,0,.1); }
+  .fl-end-bad .fl-thumb { box-shadow: 0 0 0 2px #d93025, 0 6px 18px rgba(0,0,0,.1); }
+  .fl-end-neutral .fl-thumb { box-shadow: 0 0 0 2px #8e8e93, 0 6px 18px rgba(0,0,0,.1); }
+  .fl-cap { font-size: 12px; line-height: 17px; color: #333; margin-top: 7px; min-height: 34px; }
+  .fl-cap code { font: 600 10.5px ui-monospace, Menlo, monospace; background: #111; color: #fff; padding: 0 5px; border-radius: 3px; margin-right: 5px; }
+  .fl-ref { color: #8e8e93; }
+  .fl-note { flex: none; width: 200px; }
+  .fl-note-box { height: calc(var(--fl-crop-h) * var(--fl-k) * 1px); border-radius: 8px; border: 1.5px dashed #b8b8be; display: grid; place-items: center; text-align: center; font-size: 12.5px; line-height: 19px; color: #444; padding: 12px; background: #fff; box-sizing: border-box; }
+  .fl-arrow { flex: none; width: 118px; padding: calc(var(--fl-crop-h) * var(--fl-k) * .38px) 8px 0; text-align: center; }
+  .fl-arrow-t { font-size: 11.5px; line-height: 15px; color: var(--c); font-weight: 600; min-height: 30px; display: flex; align-items: flex-end; justify-content: center; }
+  .fl-arrow-l { position: relative; border-top: 2.5px solid var(--c); margin-top: 6px; }
+  .fl-arrow-l::after { content: ""; position: absolute; right: -2px; top: -7px; border: 6px solid transparent; border-left: 9px solid var(--c); border-right: 0; }
+  .fl-arrow-s { font-size: 10.5px; color: #8e8e93; margin-top: 6px; line-height: 14px; }
+  .fl-fan { display: flex; gap: 18px; align-items: flex-start; }
+  .fl-cond { font-size: 11.5px; line-height: 15px; font-weight: 600; color: var(--c); margin: 0 0 6px 2px; display: flex; align-items: center; gap: 5px; }
+  .fl-cond::before { content: ""; width: 14px; border-top: 2.5px solid var(--c); }
+  .fl-fanlane .fl-from { padding-top: calc(var(--fl-crop-h) * var(--fl-k) * .5px); }
+  .fl-hot { outline: 3px dashed #7c3aed !important; outline-offset: 3px; border-radius: 6px; }
+  .fl-lightbox { position: fixed; inset: 0; background: rgba(20,20,24,.55); display: none; place-items: start center; padding: 24px 0; overflow: auto; z-index: 999; cursor: zoom-out; }
+  .fl-lightbox.fl-on { display: grid; }
+  .fl-lightbox .fl-full > * { transform: none !important; }
+  .fl-lb-cap { color: #fff; font-size: 14px; margin: 0 0 10px; text-align: center; }
+  #catalog { display: grid; grid-template-columns: repeat(auto-fill, calc(var(--fl-win-w) * 1px)); gap: 28px; }
+  #catalog h3 { font-size: 13px; margin: 0 0 8px; }
+</style>
+</head>
+<body>
+<div class="fl-stage">
+  <h1>交互流程骨架（示例页面：一个设置按钮 + 一个危险动作 + 工具栏刷新）</h1>
+  <p class="fl-lead">点任意缩略图看原尺寸窗口，点任意处或 Esc 关闭。Toast 与确认弹窗是现有组件的示意，属演示层，不移植。</p>
+  <div id="flows"></div>
+  <h2>状态目录</h2>
+  <p class="fl-lead">和上方流程用同一个 win(s) 渲染；排版检查只查这里：checkLayout({ win: '#catalog .sk-win', scroll: '.sk-body', card: '.sk-card' })。</p>
+  <div id="catalog"></div>
+</div>
+<script>
+// ===== 示例页面（换成定稿稿里的渲染） =====
+function page(s) {
+  if (s.loading) return `<div class="sk-card"><span class="sk-skel"></span><span class="sk-skel" style="width:60px"></span></div>`;
+  if (s.err) return `<div class="sk-card"><span class="sk-err">无法读取配置</span><button class="sk-btn">重试</button></div>`;
+  const sync = s.saving ? `<button class="sk-btn" disabled>保存中...</button>` : `<button class="sk-btn ${s.on ? 'sk-pri' : ''}">${s.on ? '已开启' : '开启'}</button>`;
+  return `<div class="sk-card"><span>同步：${s.on ? '开' : '关'}</span>${sync}</div>
+          <div class="sk-card"><span>清空缓存</span><button class="sk-btn">清空</button></div>`;
+}
+const overlay = s => (s.toast ? `<div class="sk-toast sk-${s.toast[0]}">${s.toast[1]}</div>` : '')
+  + (s.modal ? `<div class="sk-mask"><div class="sk-modal"><b>清空缓存？</b><div>清空后需要重新统计。</div><div class="sk-modal-ft"><button class="sk-btn" ${s.modal === 'loading' ? 'disabled' : ''}>取消</button><button class="sk-btn sk-pri" ${s.modal === 'loading' ? 'disabled' : ''}>${s.modal === 'loading' ? '清空中...' : '确认清空'}</button></div></div></div>` : '');
+const win = s => `<div class="sk-win"><aside class="sk-side"></aside><main class="sk-main"><div class="sk-bar">示例页<button class="sk-btn">刷新</button></div><div class="sk-body">${page(s)}</div>${overlay(s)}</main></div>`;
+
+// ===== 状态目录（示例；真实页面照状态清单逐条列） =====
+const OK = { on: false };
+const STATES = [
+  ['A1 正常', OK], ['B1 首次加载', { loading: true }], ['B3 读取失败', { err: true }], ['C9 同步保存中', { ...OK, saving: true }],
+  ['C6 清空确认', { ...OK, modal: 'open' }], ['C9 清空中', { ...OK, modal: 'loading' }],
+];
+
+// ===== 流程数据（通用结构，换页只改 SEL 和 FLOWS） =====
+const C = { user: '#0a66e8', sys: '#8e8e93', ok: '#30a14e', bad: '#d93025' };
+const N = (id, cap, s, o = {}) => ({ kind: 'node', id, cap, s, ...o });
+const A = (t, c, sub) => ({ kind: 'arrow', t, c, sub });
+const NOTE = t => ({ kind: 'note', t });
+const FAN = (...branches) => ({ kind: 'fan', branches });
+const B = (cond, c, node) => ({ cond, c, node });
+const SEL = { sync: '.sk-card:first-child .sk-btn', clear: '.sk-card:nth-child(2) .sk-btn', retry: '.sk-body .sk-btn', ok: '.sk-modal .sk-pri', refresh: '.sk-bar .sk-btn' };
+const FLOWS = [
+  { t: '① 进入页面', q: '系统先读配置，读完落到某一种开局。<b>判断：每种开局你都知道下一步该点什么吗。</b>',
+    lanes: [
+      { items: [NOTE('从侧栏进入'), A('进入页面', C.user), N('1-1', '骨架', { loading: true }, { ref: 'B1' }), A('读取完成', C.sys, '最常见'), N('1-2', '同步关着', OK, { ref: 'A1' })] },
+      { from: '从 <b>1-1</b> 分出', fan: true, items: [FAN(
+        B('同步已开启', C.sys, N('1-3', '同步开着', { on: true }, { ref: 'A1' })),
+        B('读取失败', C.bad, N('1-4', '行内报错', { err: true }, { hot: 'retry', ref: 'B3' })),
+      )] },
+      { from: '从 <b>1-4</b> 分出', items: [A('点「重试」', C.user), NOTE('回到 1-1')] },
+      { from: '从 <b>1-2</b> 分出', items: [A('随时可点', C.user), N('1-5', '工具栏「刷新」：要点的在工具栏，这个节点不裁', OK, { hot: 'refresh', ref: 'E5', full: true }), A('点「刷新」', C.user), NOTE('回到 1-1 重读')] },
+    ] },
+  { t: '② 开启同步', q: '点即保存，没有确认。<b>判断：保存失败时按钮会不会回到原样。</b>',
+    lanes: [
+      { items: [N('2-1', '同步关着', OK, { hot: 'sync', ref: 'A1' }), A('点「开启」', C.user, '点即保存 · 无确认'), N('2-2', '按钮「保存中...」', { ...OK, saving: true }, { ref: 'C9' }), A('保存成功', C.ok), N('2-3', '同步开着 + Toast', { on: true, toast: ['ok', '已开启同步'] }, { ref: 'C8', end: 'ok' })] },
+      { from: '从 <b>2-2</b> 分出', fan: true, items: [FAN(B('保存失败', C.bad, N('2-4', '按钮回到「开启」+ 红色 Toast', { ...OK, toast: ['bad', '保存失败，请重试'] }, { ref: 'C8', end: 'bad' })))] },
+    ] },
+  { t: '③ 清空缓存', q: '危险动作要二次确认。<b>判断：取消和失败时是否什么都没变。</b>',
+    lanes: [
+      { items: [N('3-1', '正常', OK, { hot: 'clear', ref: 'A1' }), A('点「清空」', C.user, '只打开确认'), N('3-2', '确认弹窗', { ...OK, modal: 'open' }, { hot: 'ok', ref: 'C6' }), A('点「确认清空」', C.user), N('3-3', '清空中，不能关', { ...OK, modal: 'loading' }, { ref: 'C9' }), A('清空成功', C.ok), N('3-4', 'Toast', { ...OK, toast: ['ok', '已清空'] }, { ref: 'C8', end: 'ok' })] },
+      { from: '从 <b>3-2</b> 分出', items: [A('点「取消」', C.user), N('3-5', '什么都没改', OK, { ref: 'C6', end: 'neutral' })] },
+      { from: '从 <b>3-3</b> 分出', fan: true, items: [FAN(B('清空失败', C.bad, N('3-6', '弹窗留着 + 红色 Toast', { ...OK, modal: 'open', toast: ['bad', '清空失败，请重试'] }, { ref: 'C8', end: 'bad' })))] },
+    ] },
+];
+
+// ===== 渲染（通用，换页不用改） =====
+const NODES = {};
+const nodeHtml = it => {
+  if (NODES[it.id]) console.warn('节点编号重复', it.id);
+  NODES[it.id] = it;
+  const full = it.full ? ' style="--fl-cx:0;--fl-cy:0;--fl-crop-h:var(--fl-win-h)"' : '';
+  return `<div class="fl-node ${it.end ? 'fl-end-' + it.end : ''}" data-id="${it.id}"${full}><div class="fl-thumb">${win(it.s)}</div><div class="fl-cap"><code>${it.id}</code>${it.cap}${it.ref ? ` <span class="fl-ref">· ${it.ref}</span>` : ''}</div></div>`;
+};
+const renderItem = it => it.kind === 'arrow'
+  ? `<div class="fl-arrow" style="--c:${it.c}"><div class="fl-arrow-t">${it.t}</div><div class="fl-arrow-l"></div>${it.sub ? `<div class="fl-arrow-s">${it.sub}</div>` : ''}</div>`
+  : it.kind === 'note' ? `<div class="fl-note"><div class="fl-note-box">${it.t}</div><div class="fl-cap"></div></div>`
+  : it.kind === 'fan' ? `<div class="fl-fan">${it.branches.map(b => `<div><div class="fl-cond" style="--c:${b.c}">${b.cond}</div>${nodeHtml(b.node)}</div>`).join('')}</div>`
+  : nodeHtml(it);
+const markHot = (root, key, id) => {
+  if (!key) return;
+  const el = root.querySelector(SEL[key]);
+  if (el) el.classList.add('fl-hot'); else console.warn('SEL 未命中', key, id);
+};
+document.getElementById('flows').innerHTML = `<div class="fl-legend"><span><i style="--c:${C.user}"></i>用户操作</span><span><i style="--c:${C.sys}"></i>系统事件</span><span><i style="--c:${C.ok}"></i>成功</span><span><i style="--c:${C.bad}"></i>失败 / 异常</span><span><em>紫圈</em>下一步要点的位置</span><span><b style="--c:#30a14e"></b><b style="--c:#d93025"></b><b style="--c:#8e8e93"></b>终点框，颜色跟结果走</span><span>并排的几张 = 同一步的不同结果，互不相连</span><span>灰字 = 状态清单编号</span></div>`
+  + FLOWS.map(f => `<section class="fl-flow"><h2>${f.t}</h2><p class="fl-q">${f.q}</p>${f.lanes.map(l => `<div class="fl-lane ${l.fan ? 'fl-fanlane' : ''}">${l.from ? `<div class="fl-from">${l.from}</div>` : ''}${l.items.map(renderItem).join('')}</div>`).join('')}</section>`).join('');
+document.querySelectorAll('#flows .fl-node[data-id]').forEach(n => markHot(n, NODES[n.dataset.id].hot, n.dataset.id));
+document.getElementById('catalog').innerHTML = STATES.map(([name, s]) => `<div><h3>${name}</h3>${win(s)}</div>`).join('');
+const lb = document.createElement('div'); lb.className = 'fl-lightbox'; document.body.appendChild(lb);
+lb.addEventListener('click', () => lb.classList.remove('fl-on'));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('fl-on'); });
+document.querySelectorAll('#flows .fl-thumb').forEach(t => t.addEventListener('click', () => {
+  const it = NODES[t.parentElement.dataset.id];
+  lb.innerHTML = `<div><div class="fl-lb-cap">${it.id} · ${it.cap}${it.ref ? ' · ' + it.ref : ''}</div><div class="fl-full">${win(it.s)}</div></div>`;
+  markHot(lb, it.hot, it.id); lb.classList.add('fl-on');
+}));
+</script>
+</body>
+</html>
